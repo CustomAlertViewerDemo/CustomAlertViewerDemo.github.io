@@ -1,0 +1,9 @@
+{
+    "type": "FeatureCollection",
+                                                                                    
+    "features": [
+        {"type":"Feature","id":"01","properties":{"latitude": 47.60417107918743, "longitude": -122.33657529521442, "name":"Federal Office Building","address":"906 1st Ave", "city": "Seattle", "zipcode": "98104", "state": "Washington", "email": "contact@wa.gov"},"geometry":{"type":"Point","coordinates":[-122.33657529521442, 47.60417107918743]}},
+        {"type":"Feature","id":"02","properties":{"longitude": -122.30459278549253, "latitude": 47.65461239172855, "name":"University of Washington","address":"371 Loew Hall, Seattle", "city": "Seattle", "zipcode": "98195", "state": "Washington", "email": "fmlast@school.edu"},"geometry":{"type":"Point","coordinates":[-122.30459278549253, 47.65461239172855]}},
+        {"type":"Feature","id":"03","properties":{"longitude": -122.38462101730077, "latitude": 47.66960490404168, "name":"Ballard Customer Service Center","address":"5604 22nd Ave NW", "city": "Seattle", "zipcode": "98107", "email": "anyone@provider.com"},"geometry":{"type":"Point","coordinates":[-122.38462101730077, 47.66960490404168]}}
+    ]
+}

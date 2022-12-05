@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">        
+        <title>Custom Alert Viewer Demo</title>
+        <link rel="stylesheet" href="/leaflet/leaflet.css">
+        <script src="/leaflet/leaflet.js"></script>       
+        <!-- <script src="/Leaflet.markercluster-1.4.1/dist/leaflet.markercluster.js"></script> -->
+        <script src="/leaflet-button-master/L.Control.Button.js""></script>
+        <!-- <link rel="cluster style" href="/Leaflet.markercluster-1.4.1/dist/MarkerCluster.css"> -->
+        <style>
+
+            html, body, #map {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                cursor: pointer;
+            }
+            
+            .leaflet-popup-tip {
+                background-color:   blue;
+            }
+
+            .popup {
+                margin: 20px;
+                /* background-color: lightgray; */
+                font-family: Arial, Helvetica, sans-serif;
+                color: white;
+                font-size: 13px;
+            }
+            .legend-primary {
+                background-color:   rgb(31, 31, 31);
+                border: 4px solid blue;
+                color: white;
+                width: 125px;
+                padding: 6px 8px;
+                border-radius: 10px;
+                font-size: 16px;
+                text-align: center;
+                margin: 10px;
+            }
+
+            .alert-viewer {
+                background-color:   rgb(31, 31, 31);
+                border: 4px solid blue;
+                color: white;
+                width: 250px;
+                height: 250px;
+                /* padding: 6px 8px; */
+                border-radius: 10px;
+                font-size: 14px;
+                text-align: center;
+                /* margin: 500px; */
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
+            .popuptitle {
+                margin: 20px;
+                /* background-color: lightgray; */
+                font-family: Arial, Helvetica, sans-serif;
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            .image {
+                height: 40px;
+                width: 40px;
+            }
+            .leaflet-popup-content-wrapper, .leaflet-popup.tip {
+                background-color:   rgb(31, 31, 31);
+                border: 4px solid blue;                
+            }
+
+            #alert_type {
+                padding: 6px 8px;
+                color: white;
+                font: 14px/16px Arial, Helvetica, sans-serif;
+                background-color: black;
+                box-shadow: 0 0 15px rgba(0,0,0,0.2);
+                border-radius: 10px;
+                width: 225px;
+            }
+            .slidecontainer {
+              width: 300px;
+            }
+
+            /* The slider itself */
+            .slider {
+              width: 95%; 
+              /* height: 50%;  */
+              background-color: rgb(31, 31, 31);
+              cursor: pointer;
+              border: 4px solid blue;
+              border-radius: 10px;
+              position: relative;
+            }
+            
+            .slide-label {
+                color: white;
+                font: 16px/18px Arial, Helvetica, sans-serif;
+                background-color: rgb(31, 31, 31);
+                /* box-shadow: 0 0 15px rgba(0,0,0,0.2); */
+                width: 90%;
+                /* text-align: center;            */
+                border-radius: 10px;  
+                cursor: default;
+        }            
+        .checkbox {
+            margin:4px, 4px;
+            padding:4px;
+            background-color: rgb(31, 31, 31);
+            color: white;
+            width: 225px;
+            height: 375px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            text-align:left;
+            border-radius: 10px;
+            border: 4px solid blue;
+            
+        }
+        .mini-checkbox {
+            cursor: pointer;
+        }
+        .checkbox-title {
+            color: white;
+            font: 16px/18px Arial, Helvetica, sans-serif;
+            background-color: rgb(31, 31, 31);
+            text-align: left;
+        }
+
+        .btn-primary {
+            border-color: blue;
+            background-color: rgb(31, 31, 31);
+            font-weight: bold;
+            border-width: 4px;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font: 24px/30px Arial, Helvetica, sans-serif;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+        </style>
+
+        <meta name="viewport" content="width=device-width,
+            initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    </head>
+        
+    <body>
+        
+        <div id="map"></div>
+        <button id="helpbutton" role="button" class="btn-primary">Submit</button>
+        <script>
+            var customIcon = L.Icon.extend({
+                options: {
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2160/2160420.png',
+                    iconSize: [30, 30]
+                }
+            })
+            
+            //adding alarm icon
+            var alarmIcon = L.icon({
+                iconUrl: '/images/alarm.png',
+                iconSize: [15,15]
+            });
+            
+            //adding building icon
+            var buildingIcon = L.icon({
+                iconUrl: '/images/building.png',
+                iconSize: [20,20]
+            });
+
+            //TODO: add lightmap mode; for now it just looks ugly 
+            // var lightMap = L.tileLayer(
+            //     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            //     {attribution: "&copy; OpenStreetMap"}
+            // );
+            var darkMap = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+                {attribution: "&copy; OpenStreetMap"}
+            );
+            
+            let map = L.map("map", {layers: [darkMap]}).setView([47.626031, -122.376369], 10.5);
+
+            //creating objects for layers control
+            var baseMaps = {
+                // "OpenStreetMap": lightMap,
+                "CartoDB": darkMap
+            };
+            
+            //TODO: add back in once you create light version
+            //creating a layer control
+            // var layerControl = L.control.layers(baseMaps).addTo(map)
+                    
+        // testing loading of local geojson file
+        //this section works, but it makes the map very slow...
+        //TODO: figure out how to allow state popups and country popups
+        //Idea: use hover function to do so
+        // fetch("/data/geoBoundariesCGAZ_ADM1.geojson")
+        //     .then(function(response) {
+        //         return response.json();
+        //     })
+        //     .then(function(data) {
+        //         L.geoJSON(data, {
+        //             style: {
+        //                 color: "green",
+        //                 fillOpacity: 0,
+        //                 weight: 0.5
+        //             },
+        //             onEachFeature: function(feature, layer) {
+        //             layer.bindPopup('<div class="popuptitle" >' + feature.properties.shapeName + '</div>');
+        //         }
+        //     }).addTo(map);
+        //     });
+        
+        //loading countries geojson file
+        fetch("/data/countries.geojson")
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            L.geoJSON(data, {
+                style: {
+                    color: "blue",
+                    fillOpacity: 0,
+                    weight: 1.0,
+                },
+             onEachFeature: function(feature, layer) {
+                    //TODO: decide if you want this feature
+                    //commenting out because it got annoying for map testin...
+                    // layer.bindPopup('<div class="popuptitle" >' + feature.properties.ADMIN + '</div>');
+                }
+            }).addTo(map);
+        });
+
+            //TODO: create working marker cluster
+            // var alarmCluster = L.markerClusterGroup();
+
+        //getting ready to collect from seattle data api
+        let url = "https://data.seattle.gov/resource/kzjm-xkqj.geojson?"
+        //TODO: find a way to update the checkmarks if a new alert type is reported that wasn't before
+        let mapCreator = function(url, query) {
+            fetch(url + query)
+                .then(function(response) {
+                    return response.json();
+                })
+            
+                .then(function(data) {
+                    alerts_layer.clearLayers();
+                    data.features.forEach(function(element) {
+                        alert_values_set.add(element.properties.type); 
+                    });
+                    alert_view_html = '<div class="popuptitle">Column View:</div><div id="alert-viewer">Select an alert to view details.<br><br>'
+                    data.features.forEach(function(element) {
+                        alert_view_html += 
+                        '<a href="' + `https://data.seattle.gov/resource/kzjm-xkqj.geojson?incident_number=${element.properties.incident_number}` + '">' + element.properties.type +'</a><br>';
+                    });
+                    alert_view_html += '</div>'
+
+                    //unique and ordered array
+                    alert_values_array = Array.from(alert_values_set).sort();
+                    
+                    html = '<legend class="checkbox-title">Select alert types and then click submit to update the map.</legend><br>';
+                    alert_values_array.forEach(function(element) {
+                        html += 
+                            '<input type="checkbox" class="mini-checkbox" name="mainCheckbox" value="' + element + '" id="' + element + '" checked>' + '<label for="' + element + '">' + element + "</label>" +
+                            '<input type="range" class="slider" min="0" max="20000" value="20000" step="50" oninput="showVal(this.value, \'distance-' + element + '\')" id="slider-' + element + '" >' + '<label for="' + '\'distance-' + element + '\'">Max distance: ' + '<span id="distance-' + element + '">20000</span>' + '<span id="units-' + element + '"> meters</span>' + '</label><br><br>' 
+                            // <p class="slide-label">Max distance: <span id="distance-' + element + '"></span> m<br>'
+                    });
+                    // console.log(html)
+                    
+                    let checkboxDiv = L.control({position: "topleft"});
+                    checkboxDiv.onAdd = function() {
+                        let div = L.DomUtil.create("div", "checkbox");
+                        div.innerHTML = html
+                        return div;
+                    };
+        
+                    checkboxDiv.addTo(map);
+                    //disable map movement while on alertViewer
+                    checkboxDiv.getContainer().addEventListener("mousedown", function () {
+                        map.dragging.disable();
+                    });
+                    checkboxDiv.getContainer().addEventListener("dblclick", function () {
+                        map.doubleClickZoom.disable();
+                    });
+
+                    // Re-enable dragging when user's cursor leaves the element
+                    checkboxDiv.getContainer().addEventListener("mouseover", function () {
+                        map.dragging.enable();
+                        map.doubleClickZoom.enable();
+                    });
+
+                    let alertViewer = L.control({position: "bottomright"});
+                    alertViewer.onAdd = function() {
+                            // html = 
+                            //         '<div class="legend-primary">' +
+                            //             '<b>Legend</b>' + '<br><br>' +
+                            //             '<img class="image" src="/images/alarm.png" alt="image is not available"><br>alert<br><br>' +
+                            //             '<img class="image" src="/images/building.png" alt="image is not available"><br>Asset<br>' +
+                            //         '</div>'
+                            let div = L.DomUtil.create("div", "alert-viewer");
+                            div.innerHTML = alert_view_html
+                            return div;
+                        };
+                    alertViewer.addTo(map); 
+                    //disable map movement while on alertViewer
+                    alertViewer.getContainer().addEventListener('mousedown', function () {
+                        map.dragging.disable();
+                    });
+                    
+                    alertViewer.getContainer().addEventListener('dblclick', function () {
+                        map.doubleClickZoom.disable();
+                    });
+                    
+                    // Re-enable dragging when user's cursor leaves the element
+                    alertViewer.getContainer().addEventListener('mouseout', function () {
+                        map.dragging.enable();
+                        map.doubleClickZoom.enable();
+                    });
+                    L.geoJSON(data, 
+                    {   
+                        pointToLayer(geoJSONPoint, latlng, feature) {
+                            return L.marker(latlng, {icon: alarmIcon});
+                        },                
+                        onEachFeature: function(feature, layer, latlng) {
+                            alert_html = 
+                            '<div class="popuptitle">' +
+                                '<a href="' + `https://data.seattle.gov/resource/kzjm-xkqj.geojson?incident_number=${feature.properties.incident_number}` + '">' +
+                                    feature.properties.type +
+                                    '</a>' + 
+                                
+                                '</div>' +
+                                '<div class="popup">' +
+                                    'Address: ' + feature.properties.address + '<br><br>' +
+                                    'Coordinates: ' +
+                                    feature.properties.latitude + ', ' + feature.properties.longitude + '<br><br>' +
+                                    'DateTime: ' + feature.properties.datetime +
+                                '</div>'
+                            layer.bindPopup(
+                                alert_html
+                        );
+                            
+                        },
+                    } 
+                    ).addTo(alerts_layer);
+                })};        
+                   
+        // let slider = L.control({position: "topleft"});
+                    
+        //creating dynamic slider label
+        function showVal(Val, distanceId) {
+            console.log(Val);
+            console.log(distanceId);
+            document.getElementById(distanceId);
+            document.getElementById(distanceId).innerHTML = Val;
+        }
+
+        //TODO: sync this as far as  timezones go
+        const today = new Date()
+        const yesterday = new Date(today)
+        yesterday.setDate(yesterday.getDate() - 1)
+
+        let query = "$query=select * where datetime > '" + yesterday.toISOString().replace('Z', '') + "'"
+        
+        let alert_values_set = new Set();
+
+        mapCreator(url, query);
+
+        //creating alerts layer for future manipulation
+        let alerts_layer = L.layerGroup().addTo(map);
+        
+        let mapUpdater = function() {
+                
+                let sel_values = document.getElementsByName("mainCheckbox")
+                console.log(sel_values);
+
+                types_string = "((type='filler') "
+                sel_values.forEach(function(sel_value) {
+                    var id = "distance-" + sel_value.value;
+                    console.log('test1');
+                    document.getElementById(id)
+                    console.log('test2');
+                    // console.log(id);
+                    document.getElementById(id).innerHTML;
+                if (isNaN(document.getElementById(id).innerHTML)) {
+                    var maxDistance = 4000;
+                    console.log('nan')
+                    document.getElementById(id).innerHTML = 4000;
+                    document.getElementById("units").innerHTML = ' Meters';
+                    // console.log('test');
+                } else {
+                    console.log('test');
+                    var maxDistance = document.getElementById(id).innerHTML;
+                    console.log(maxDistance)
+                }
+
+                    if (sel_value.checked) {
+                        
+                        types_string += "or (type='" + sel_value.value + "' and (within_circle(report_location, 47.66960490404168, -122.38462101730077, " + maxDistance + ") or within_circle(report_location, 47.65461239172855, -122.30459278549253, " + maxDistance + ") or within_circle(report_location, 47.60417107918743, -122.33657529521442, " + maxDistance + ")))";
+                    }
+                    
+                    // console.log(types_string);
+                });
+                types_string = types_string + ")"
+
+                //getting max distance 
+                
+
+                //querying Socrata API
+                query = "$query=select * where datetime > '" + yesterday.toISOString().replace('Z', '') + "' and " + types_string;
+
+            fetch(url + query)
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    alerts_layer.clearLayers();
+                    alert_view_html = '<div id="alert-viewer">Select an alert to view details.<br><br>';
+                    data.features.forEach(function(element) {
+                        alert_view_html += 
+                        '<a href="' + `https://data.seattle.gov/resource/kzjm-xkqj.geojson?incident_number=${element.properties.incident_number}` + '">' + element.properties.type +'</a><br>';
+                    });
+
+                    alert_view_html += '</div>'
+                    document.getElementById('alert-viewer').innerHTML = alert_view_html;
+                    L.geoJSON(data, 
+                    {   
+                        pointToLayer(geoJSONPoint, latlng, feature) {
+                            return L.marker(latlng, {icon: alarmIcon});
+                        },                
+                        onEachFeature: function(feature, layer, latlng) {
+                            layer.bindPopup(
+                                '<div class="popuptitle">' +
+                                '<a href="' + `https://data.seattle.gov/resource/kzjm-xkqj.geojson?incident_number=${feature.properties.incident_number}` + '">' +
+                                    feature.properties.type +
+                                    '</a>' + 
+                                
+                                '</div>' +
+                                '<div class="popup">' +
+                                    'Address: ' + feature.properties.address + '<br><br>' +
+                                    'Coordinates: ' +
+                                    feature.properties.latitude + ', ' + feature.properties.longitude + '<br><br>' +
+                                    'DateTime: ' + feature.properties.datetime +
+                                '</div>'
+                        );
+                            
+                        },
+                    } 
+                    ).addTo(alerts_layer);
+                })};        
+                var button = new L.Control.Button(L.DomUtil.get('helpbutton'), {
+                position: 'bottomleft'
+            });
+                button.addTo(map);
+                button.on('click', mapUpdater);
+            
+            let legend = L.control({position: "topright"});
+                legend.onAdd = function() {
+                    html = 
+                            '<div class="legend-primary">' +
+                                '<b>Legend</b>' + '<br><br>' +
+                                '<img class="image" src="/images/alarm.png" alt="image is not available"><br>Alert<br><br>' +
+                                '<img class="image" src="/images/building.png" alt="image is not available"><br>Asset<br>' +
+                            '</div>'
+                    let div = L.DomUtil.create("div");
+                    div.innerHTML = html
+                    return div;
+                };
+
+            legend.addTo(map);
+
+            //disable map movement while on legend
+            legend.getContainer().addEventListener("mousedown", function () {
+                map.dragging.disable();
+                // map.doubleClickZoom.disable(); 
+
+            });
+            
+            legend.getContainer().addEventListener("dblclick", function () {
+                // map.dragging.disable();
+                map.doubleClickZoom.disable();
+                // map.doubleClickZoom.enable();
+            });
+
+            // Re-enable dragging when user's cursor leaves the element
+            legend.getContainer().addEventListener("mouseout", function () {
+                map.dragging.enable();
+                map.doubleClickZoom.enable(); 
+
+            });
+
+        fetch("/data/buildings.geojson")
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                L.geoJSON(data, {
+                    pointToLayer(geoJSONPoint, latlng, feature) {
+                        return L.marker(latlng, {icon: buildingIcon});
+                    },
+                    onEachFeature: function(feature, layer, latlng) {
+                     layer.bindPopup(
+                            '<div class="popuptitle">' +
+                            // '<a href="' + `https://data.seattle.gov/resource/kzjm-xkqj.geojson?incident_number=${feature.properties.incident_number}` + '">' +
+                                feature.properties.name +
+                                // '</a>' + 
+                                
+                            '</div>' +
+                            '<div class="popup">' +
+                                'Address: ' + feature.properties.address + '<br><br>' +
+                                'Email: ' + feature.properties.email + '<br><br>' +
+                                'Coordinates: ' + feature.properties.latitude + ', ' + feature.properties.longitude +
+                            '</div>'
+                    );
+                    }
+                    
+                }).addTo(map);
+            });
+        </script>
+        
+    </body>
+    
+</html>
